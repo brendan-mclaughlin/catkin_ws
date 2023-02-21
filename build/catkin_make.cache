@@ -1,0 +1,2 @@
+cv_basics:pubsh_subscb
+-DCATKIN_DEVEL_PREFIX=/home/selfdrivingcar/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/selfdrivingcar/catkin_ws/install -G Unix Makefiles

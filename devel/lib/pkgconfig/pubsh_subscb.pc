@@ -1,0 +1,8 @@
+prefix=/home/selfdrivingcar/catkin_ws/devel
+
+Name: pubsh_subscb
+Description: Description of pubsh_subscb
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

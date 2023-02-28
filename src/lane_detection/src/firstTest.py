@@ -86,7 +86,7 @@ def detectDataPoint(img):
                 continue
             else:
                 rightPos = leftPos + np.argmax(horizontal_pixels[leftPos:])
-                if rightPos - leftPos > 70:
+                if rightPos - leftPos > 50:
                     print("HOORAY")
                     # Add pairs
                     Y_coor.append(y)
@@ -210,13 +210,14 @@ for fileName in listdir(path)[0:1]:
     intercept, outFrame, theme =  outputFrame(rgb_image, ransacLeft, ransacRight)
 
     ### Plot
+    print("tesdt")
     plotFrame(intercept, outFrame, theme)
-
-    ### Answer
+    xx = 10
+        ### Answer
     response(intercept)
     rgb_image = None
     plt.imshow(outFrame)  
-    clear_cache(dir = ".")
+    plt.figure(0).clear()
 
 
 

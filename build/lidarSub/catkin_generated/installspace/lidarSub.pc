@@ -1,0 +1,8 @@
+prefix=/home/selfdrivingcar/catkin_ws/install
+
+Name: lidarSub
+Description: Description of lidarSub
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

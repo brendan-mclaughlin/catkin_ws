@@ -464,8 +464,20 @@ gtest_main_LIB_DEPENDS:STATIC=general;gtest;
 //The directory containing a CMake configuration file for image_transport.
 image_transport_DIR:PATH=/opt/ros/noetic/share/image_transport/cmake
 
+//Value Computed by CMake
+lane_detection_BINARY_DIR:STATIC=/home/selfdrivingcar/catkin_ws/build/lane_detection
+
+//Value Computed by CMake
+lane_detection_SOURCE_DIR:STATIC=/home/selfdrivingcar/catkin_ws/src/lane_detection
+
 //Path to a library.
 lib:FILEPATH=/opt/ros/noetic/lib/librospack.so
+
+//Value Computed by CMake
+lidarSub_BINARY_DIR:STATIC=/home/selfdrivingcar/catkin_ws/build/lidarSub
+
+//Value Computed by CMake
+lidarSub_SOURCE_DIR:STATIC=/home/selfdrivingcar/catkin_ws/src/lidarSub
 
 //The directory containing a CMake configuration file for message_filters.
 message_filters_DIR:PATH=/opt/ros/noetic/share/message_filters/cmake
@@ -666,7 +678,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=6
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

@@ -9,20 +9,20 @@ from scipy.signal import find_peaks
 from sklearn import linear_model
 from os import listdir
 from clear_cache import clear as clear_cache
-import matplotlib# inline
+import matplotlib #inline
 
 
 path = "/home/selfdrivingcar/catkin_ws/src/lane_detection/src/images/"
 
-def getResizedImage(fileName, scale_percent=20):
+def getResizedImage(fileName, scale_percent=50):
     img = cv2.imread(path + fileName)
     #img = cv2.imread(r'/home/ubuntu/catkin_ws/src/lane_detection/src/images' + fileName)
 
-    # Resize
+    #Resize
     #assert not isinstance(img,type(None)), 'image not found'
 
     print('Original Dimensions : ',img.shape)
-#     scale_percent = 20 # percent of original size
+    #scale_percent = 20 # percent of original size
     # img.set(3,640)
     # img.set(4,480)
     width = int(img.shape[1] * scale_percent / 100)
@@ -65,11 +65,9 @@ def detectDataPoint(img):
     rights = []
 
     y = img.shape[0] - 1 
-    print("Y67:  ")
-    print(y)
     print(img.shape)
-    while y >= 0:
-        if (len(lefts) >= 10):  
+    while y >= 120:
+        if (len(lefts) >= 50):  
             break
         horizontal_pixels = img[y,:]
         if (horizontal_pixels.min() >=0):
@@ -77,16 +75,14 @@ def detectDataPoint(img):
             continue
         else:
             leftPos = np.argmin(horizontal_pixels) #Returns the indices of the minimum values along an axis.
-            tempXXX = horizontal_pixels[leftPos:].max()
-            tempY = horizontal_pixels[leftPos:]
-
-            print(tempXXX)
             if (horizontal_pixels[leftPos:].max() <= 0):
                 y -= 1
                 continue
             else:
                 rightPos = leftPos + np.argmax(horizontal_pixels[leftPos:])
-                if rightPos - leftPos > 50:
+
+                tempBuffer = y/240 * 170
+                if rightPos - leftPos > tempBuffer:
                     print("HOORAY")
                     # Add pairs
                     Y_coor.append(y)
@@ -94,7 +90,7 @@ def detectDataPoint(img):
                     rights.append(rightPos)
         ### update 
         #y -= 10
-        y -=1
+        y -= 1
     
     return Y_coor, lefts, rights
 
@@ -112,7 +108,6 @@ def fitRANSAC(Y_coor, lefts, rights):
 
     # Robustly fit linear model with RANSAC algorithm
     ransacLeft = linear_model.RANSACRegressor()
-    #TODO: Found array with 0 sample(s) (shape=(0, 1)) while a minimum of 1 is required by RANSACRegressor.
    
 
     ransacLeft.fit(Y_data, X_left)
@@ -202,22 +197,27 @@ for fileName in listdir(path)[0:1]:
 
     ### Detect data points
     Y_coor, lefts, rights = detectDataPoint(temp)
+    if(len(lefts) > 1) : 
 
+        ransacLeft, ransacRight =  fitRANSAC(Y_coor, lefts, rights)
+
+        ### Output Frame
+        intercept, outFrame, theme =  outputFrame(rgb_image, ransacLeft, ransacRight)
+
+        ### Plot
+        print(len(lefts))
+        plotFrame(intercept, outFrame, theme)
+        xx = 10
+            ### Answer
+        response(intercept)
+        rgb_image = None
+        plt.imshow(outFrame)  
+        plt.figure(0).clear()    
+    
+    else : 
+        print("Bad Values ")
     ### Fit Ransac
-    ransacLeft, ransacRight =  fitRANSAC(Y_coor, lefts, rights)
-
-    ### Output Frame
-    intercept, outFrame, theme =  outputFrame(rgb_image, ransacLeft, ransacRight)
-
-    ### Plot
-    print("tesdt")
-    plotFrame(intercept, outFrame, theme)
-    xx = 10
-        ### Answer
-    response(intercept)
-    rgb_image = None
-    plt.imshow(outFrame)  
-    plt.figure(0).clear()
+    
 
 
 

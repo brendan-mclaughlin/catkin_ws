@@ -131,6 +131,8 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/selfdrivingcar/catkin_ws/build/gtest/cmake_install.cmake")
+  include("/home/selfdrivingcar/catkin_ws/build/lane_detection/cmake_install.cmake")
+  include("/home/selfdrivingcar/catkin_ws/build/lidarSub/cmake_install.cmake")
   include("/home/selfdrivingcar/catkin_ws/build/pubsh_subscb/cmake_install.cmake")
   include("/home/selfdrivingcar/catkin_ws/build/cv_basics/cmake_install.cmake")
 

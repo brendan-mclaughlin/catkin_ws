@@ -38,25 +38,49 @@ def getResizedImage(fileName, scale_percent=50):
     return rgb_image
 
 
-def preprocessImage(image, low_threshold = 100, high_threshold = 250):
+def preprocessImage(image, low_threshold = 40, high_threshold = 250):
     kernel = np.ones((3,3),np.float32)/9
+
     dst = cv2.filter2D(image,-1,kernel)
     
     img_dilation = cv2.dilate(dst, kernel, iterations=3)
     img_erosion2 = cv2.erode(img_dilation, kernel, iterations=3)
     
 #     low_threshold = 100
-#     high_threshold = 250
-    edges = cv2.Canny(img_erosion2, low_threshold, high_threshold)
+#     high_threshold = 250 
 
+    
+   
+    edges = cv2.Canny(img_erosion2, low_threshold, high_threshold)
+    fig = plt.figure(figsize=(20, 10))
+    fig.add_subplot(1, 5, 1)
     plt.imshow(edges, cmap="gray")
-    plt.show()
+    
     
     sobelx = cv2.Sobel(src=edges, ddepth=cv2.CV_64F, dx=1, dy=0, ksize=5) # Sobel Edge Detection on the X axis
     sobely = cv2.Sobel(src=edges, ddepth=cv2.CV_64F, dx=0, dy=1, ksize=5) # Sobel Edge Detection on the Y axis
-    
+    sobelxy = cv2.Sobel(src=edges, ddepth=cv2.CV_64F, dx=1, dy=1, ksize=5) # Sobel Edge Detection on the Y axis
     temp = cv2.bitwise_and(sobelx, sobely)
+    temp[:130,:]=-2000
+    print(img_erosion2)
+    for i in range(110):
+        temp[239-i, :20+i]=-2000
+        temp[239-i, 290-i:]=-2000
+        temp[239-i, 80+i:220-i]=-2000
+   
+
+    fig.add_subplot(1, 5, 2)
+    plt.imshow(sobelx)
+    fig.add_subplot(1, 5, 3)
+    plt.imshow(sobely)
+    fig.add_subplot(1, 5, 4)
+    plt.imshow(temp)
+    fig.add_subplot(1, 5, 5)
+    plt.imshow(sobelxy)
+    plt.show()
     
+   
+
     return temp
 
 def detectDataPoint(img):
@@ -180,6 +204,7 @@ def response(intercept):
         print("Adjust to the left")
     else: 
         print("Adjust to the right")
+
 
 
 

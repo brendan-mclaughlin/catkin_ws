@@ -61,12 +61,12 @@ def preprocessImage(image, low_threshold = 40, high_threshold = 250):
     sobely = cv2.Sobel(src=edges, ddepth=cv2.CV_64F, dx=0, dy=1, ksize=5) # Sobel Edge Detection on the Y axis
     sobelxy = cv2.Sobel(src=edges, ddepth=cv2.CV_64F, dx=1, dy=1, ksize=5) # Sobel Edge Detection on the Y axis
     temp = cv2.bitwise_and(sobelx, sobely)
-    temp[:130,:]=-2000
+    #temp[:130,:]=-2000
     print(img_erosion2)
-    for i in range(110):
-        temp[239-i, :20+i]=-2000
-        temp[239-i, 290-i:]=-2000
-        temp[239-i, 80+i:220-i]=-2000
+    #for i in range(110):
+    #    temp[239-i, :20+i]=-2000
+    #    temp[239-i, 290-i:]=-2000
+    #    temp[239-i, 80+i:220-i]=-2000
    
 
     fig.add_subplot(1, 5, 2)
@@ -91,7 +91,7 @@ def detectDataPoint(img):
     y = img.shape[0] - 1 
     print(img.shape)
     while y >= 120:
-        if (len(lefts) >= 50):  
+        if (len(lefts) >= 120):  
             break
         horizontal_pixels = img[y,:]
         if (horizontal_pixels.min() >=0):

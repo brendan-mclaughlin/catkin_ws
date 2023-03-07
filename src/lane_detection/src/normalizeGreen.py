@@ -24,6 +24,7 @@ mask=cv2.bitwise_or(mask,dirtmask)
 imask = mask>0
 green = np.zeros_like(img, np.uint8)
 green[imask] = img[imask]
+gray = cv2.cvtColor(green, cv2.COLOR_BGR2GRAY)
 
 
 
@@ -37,7 +38,7 @@ green[imask] = img[imask]
 ## save 
 cv2.imshow("Original", img)
 
-cv2.imshow("Blur", green)
+cv2.imshow("Blur", gray)
 
 cv2.imwrite("grassImg.png",green)
 cv2.waitKey(0)

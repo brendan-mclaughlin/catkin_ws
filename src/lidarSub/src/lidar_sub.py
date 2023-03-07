@@ -1,6 +1,10 @@
+#! /usr/bin/python3
+
 import rospy
+import time
 from lidar import Lidar
 from std_msgs.msg import String
+from remoteControl import MotorControl
  
 def callback(data):
    rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
@@ -16,10 +20,23 @@ def listener():
  
     #creates lidar object, which subscribes to the lidar topic "/scan"
     lid = Lidar()
+    motorControl=MotorControl()
+    time.sleep(1) #waiting for one rotation to complete
     while True:
-        a=lid.get_lidar(1)
+        #a=lid.getLidar(1)
+        time.sleep(0.5)
+        
+        a=lid.get_minimumDist()
 
         print(a)
+        #if(a<1.5):
+            #print("SLOW DOWN")
+            #motorControl.direction=0
+            #motorControl.speed=0
+        #else:
+            #print("SPEED UP")
+            #motorControl.direction=0
+            #motorControl.speed=50
     
     # spin() simply keeps python from exiting until this node is stopped
     #rospy.spin()

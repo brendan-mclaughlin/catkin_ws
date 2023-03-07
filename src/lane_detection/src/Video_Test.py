@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import cv2
+import os
 from scipy import signal
 from scipy.signal import find_peaks
 from sklearn import linear_model
@@ -13,7 +14,7 @@ import matplotlib #inline
 
 
 ## Read
-path = "/home/selfdrivingcar/catkin_ws/src/lane_detection/src/videos/"
+path = "/home/selfdrivingcar/Videos/"
 
 
 def getResizedImage(img, scale_percent=20):
@@ -178,14 +179,16 @@ def detectDataPoint(img):
         horPixels[horPixels != 0] = 1
         for i in range(width2-10):
             if(leftIndex==-1 and sum(horPixels[width2-i-30:width2-i])>25):
+                #print("Left")
                 leftIndex=i
             if(rightIndex==-1 and sum(horPixels[width2+i:width2+30+i])>25):
+                #print("Right")
                 rightIndex=i
                 
             if(not(rightF) and not(leftF)):
                 break
 
-        if(not(leftF) and not(rightF)):
+        if(not(rightIndex==-1) and not(leftIndex==-1)):
             if(leftIndex+rightIndex>100):
                 lefts.append(width2-leftIndex)
                 rights.append(width2+rightIndex)
@@ -210,14 +213,17 @@ def grassDetection(img):
     dirtmask=cv2.inRange(hsv,(19,24,33),(50,50,255))
     mask=cv2.bitwise_or(grassmask,deadGrassMask)
     mask=cv2.bitwise_or(mask,dirtmask)
+
+    mask=cv2.erode(mask,None,iterations=2)
+    mask=cv2.dilate(mask,None,iterations=2)
     ## slice the green0
     imask = mask>0
     green = np.zeros_like(img, np.uint8)
     green[imask] = img[imask]
     gray = cv2.cvtColor(green, cv2.COLOR_BGR2GRAY)
 
-    cv2.imshow("Blur", gray)
-    cv2.waitKey(0)
+    #cv2.imshow("Blur", gray)
+    #cv2.waitKey(0)
     return gray
 
 
@@ -236,28 +242,37 @@ for counter in range(2): #fileName in listdir(path)[0:1]:
 
     #img=cv2.imread(path+fileName)
 
-    cap=cv2.VideoCapture(path+"Movie.mp4")
-    ### Preprocess Image
 
+    videoStitch=[]
+
+
+
+    cap=cv2.VideoCapture(path+"capture0.mp4")
+    ### Preprocess Image
+   
     i =0
     while(cap.isOpened()):
         ret, img = cap.read()
         if ret == False:
+            print("ret=False")
             break
         #cv2.imwrite('kang'+str(i)+'.jpg',frame)
         i+=1
-      
+        if(i==30):
+            break      
    
-        img=getResizedImage(img)
+        #img=getResizedImage(img)
 
-        print(img.shape[0])
-        print(img.shape[1])
+        #print(img.shape[0])
+        #print(img.shape[1])
         temp = grassDetection(img)
+        videoStitch.append(temp)
         rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         ### Detect data points
         Y_coor, lefts, rights = detectDataPoint(temp)
-
-        if(len(lefts) > 1) : 
+        
+        
+        if(len(lefts) < 0) : 
 
             ransacLeft, ransacRight =  fitRANSAC(Y_coor, lefts, rights)
 
@@ -265,18 +280,31 @@ for counter in range(2): #fileName in listdir(path)[0:1]:
             intercept, outFrame, theme =  outputFrame(rgb_image, ransacLeft, ransacRight)
 
             ### Plot
-            print(len(lefts))
+            #print(len(lefts))
             plotFrame(intercept, outFrame, theme)
             xx = 10
-                ### Answer
-            response(intercept)
-            rgb_image = None
-            plt.imshow(outFrame)  
-            plt.figure(0).clear()  
             
-        cap.release()
-        cv2.destroyAllWindows()  
-    
-    else : 
-        print("Bad Values ")
+                ### Answer 
+            #response(intercept)
+            rgb_image = None
+            #plt.imshow(outFrame)  
+            #plt.figure(0).clear()  
+        elif(False): 
+            print("Bad Values ")
+
+
+    #fourcc = cv2.VideoWriter_fourcc(*'XVID')
+
+    #video=cv2.VideoWriter("GrayScale.avi",0,30,(480,640))
+    video = cv2.VideoWriter("videoTest.avi", cv2.VideoWriter_fourcc(*"MJPG"), 30,(640,480))
+
+    for i in videoStitch:
+        video.write(i)
+
+    video.release()
+
+    cap.release()
+    cv2.destroyAllWindows()  
+        
+
     ### Fit Ransac

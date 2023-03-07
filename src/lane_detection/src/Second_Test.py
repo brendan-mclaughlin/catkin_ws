@@ -209,7 +209,7 @@ for fileName in listdir(path)[0:1]:
 
     print(fileName)
 
-    #img=cv2.imread(path+fileName)
+    img=cv2.imread(path+fileName)
 
     
     ### Preprocess Image

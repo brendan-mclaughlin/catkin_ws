@@ -13,7 +13,7 @@ import matplotlib #inline
 
 
 ## Read
-img = cv2.imread('/home/selfdrivingcar/catkin_ws/src/lane_detection/src/images/img2.jpg')
+path = "/home/selfdrivingcar/catkin_ws/src/lane_detection/src/images/"
 
 def plotFrame(intercept, copy3, theme):
     # create figure
@@ -139,16 +139,41 @@ def detectDataPoint(img):
     Y_coor = []
     lefts = []
     rights = []
-    while y >= 120:
+    y=img.shape[0]-1
+    height=img.shape[0]
+    width=img.shape[1]
+    width2=int(width/2)
 
+    while y >= height/2:
+        leftF=True#Left and right found
+        rightF=True
+        horPixels=img[y,:]
+        rightIndex=-1
+        leftIndex=-1
+        horPixels[horPixels != 0] = 1
+        for i in range(width2-10):
+            if(leftIndex==-1 and sum(horPixels[width2-i-30:width2-i])>25):
+                leftIndex=i
+            if(rightIndex==-1 and sum(horPixels[width2+i:width2+30+i])>25):
+                rightIndex=i
+                
+            if(not(rightF) and not(leftF)):
+                break
+
+        if(not(leftF) and not(rightF)):
+            if(leftIndex+rightIndex>100):
+                lefts.append(width2-leftIndex)
+                rights.append(width2+rightIndex)
+                Y_coor.append(y)
         y-=1
 
-    return img
+    return Y_coor,lefts,rights
 
 
 
 
 def grassDetection(img):
+
     dst = cv2.GaussianBlur(img,(5,5),cv2.BORDER_DEFAULT)
 
     hsv = cv2.cvtColor(dst, cv2.COLOR_BGR2HSV)
@@ -164,5 +189,53 @@ def grassDetection(img):
     imask = mask>0
     green = np.zeros_like(img, np.uint8)
     green[imask] = img[imask]
+    gray = cv2.cvtColor(green, cv2.COLOR_BGR2GRAY)
 
-    return green
+    #cv2.imshow("Blur", gray)
+    #cv2.waitKey(0)
+    return gray
+
+
+
+
+
+
+counter = 1
+for fileName in listdir(path)[0:1]:
+    print(f"\n[Picture {counter}]")
+    counter += 1
+    ### Get Image
+    #img = cv2.imread(r'/home/ubuntu/catkin_ws/src/lane_detection/src/images' + fileName)
+
+    print(fileName)
+
+    #img=cv2.imread(path+fileName)
+
+    
+    ### Preprocess Image
+    temp = grassDetection(img)
+    rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    ### Detect data points
+    Y_coor, lefts, rights = detectDataPoint(temp)
+
+    if(len(lefts) > 1) : 
+
+        ransacLeft, ransacRight =  fitRANSAC(Y_coor, lefts, rights)
+
+        ### Output Frame
+        intercept, outFrame, theme =  outputFrame(rgb_image, ransacLeft, ransacRight)
+
+        ### Plot
+        print(len(lefts))
+        plotFrame(intercept, outFrame, theme)
+        xx = 10
+            ### Answer
+        response(intercept)
+        rgb_image = None
+        plt.imshow(outFrame)  
+        plt.figure(0).clear()    
+    
+    else : 
+        print("Bad Values ")
+    ### Fit Ransac
+    

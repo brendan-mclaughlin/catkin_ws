@@ -28,7 +28,7 @@ def listener():
         
         a=lid.get_minimumDist()
 
-        print(a)
+        #print(a)
         #if(a<1.5):
             #print("SLOW DOWN")
             #motorControl.direction=0

@@ -2,51 +2,105 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import cv2
+import os
 from scipy import signal
 from scipy.signal import find_peaks
 from sklearn import linear_model
 from os import listdir
+from remoteControl import MotorControl
 from clear_cache import clear as clear_cache
 import matplotlib #inline
+import time
+import rospy
 
 
 
+def getResizedImage(img, scale_percent=20):
+    
+    #img = cv2.imread(r'/home/ubuntu/catkin_ws/src/lane_detection/src/images' + fileName)
 
-## Read
-path = "/home/selfdrivingcar/catkin_ws/src/lane_detection/src/images/"
+    #Resize
+    #assert not isinstance(img,type(None)), 'image not found'
 
-def plotFrame(intercept, copy3, theme):
+    print('Original Dimensions : ',img.shape)
+    #scale_percent = 20 # percent of original size
+    # img.set(3,640)
+    # img.set(4,480)
+    width = int(img.shape[1] * scale_percent / 100)
+    height = int(img.shape[0] * scale_percent / 100)
+    dim = (width, height)
+
+    # resize image
+    resized_image = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
+
+    # Change COLOR mode
+    #rgb_image = cv2.cvtColor(resized_image, cv2.COLOR_BGR2RGB)
+    
+    return resized_image
+
+
+def plotFrame(intercept, copy3, theme,grey):
     # create figure
-    fig = plt.figure(figsize=(10, 7))
+    fig = plt.figure(figsize=(20,15))
 
     # setting values to rows and column variables
     rows = 1
-    columns = 2
-
+    columns = 3
     fig.add_subplot(rows, columns, 1)
+    plt.imshow(grey)
+    fig.add_subplot(rows, columns, 2)
 
     # showing image
     plt.imshow(copy3)
     # plt.axis('off')
 
     # Adds a subplot at the 2nd position
-    fig.add_subplot(rows, columns, 2)
+    fig.add_subplot(rows, columns, 3)
     
+    
+
     # for i in range(len(lefts)):
     #     plt.scatter(lefts[i], Y_coor[i], color='blue')
     # plt.plot([X_intercept, 100 + theme.shape[1]/2], [Y_intercept, theme.shape[1]], color="red", linewidth=3)
     plt.scatter(intercept[0], intercept[1], color='blue')
     plt.plot([theme.shape[1]/2,  theme.shape[1]/2], [0, theme.shape[1]], color="red", linewidth=3)
     plt.imshow(theme)
-    plt.show()
+
+
+    plt.show(block=False)
+    plt.pause(.8)
+    plt.close()
     
-def response(intercept):
-    if (np.abs(intercept[0] - 400) < 50):
+def response(intercept,shape):
+    print(intercept)
+    
+    xMax=shape[0]
+    yMax=shape[1]
+
+    x=intercept[0]
+    y=intercept[1]
+    motorControl=MotorControl()
+    
+    motorControl.direction=0
+    motorControl.speed=0
+    
+   
+    # if bad Y intercrpt ignore. Above/below middle y threshold
+    if(y<yMax/2-50 or y>yMax/2+50) :
+        print("Incorrect Y intercept Values")
+        return 
+    elif (np.abs(intercept[0] - xMax/2) < 50):
         print("No adjustment")
-    elif (intercept[0] - 400 < 0):
+    elif (x - xMax < 0):
         print("Adjust to the left")
+        motorControl.steer += 40
     else: 
         print("Adjust to the right")
+        motorControl.steer -= 20
+
+    motorControl.control_pub.publish(f"1, {motorControl.steer}, {motorControl.direction}, {motorControl.speed}\n")        
+
+
 
 
 def outputFrame(image, ransacLeft, ransacRight):
@@ -80,6 +134,15 @@ def outputFrame(image, ransacLeft, ransacRight):
             print(f"Intercept at [{leftDot}/{rightDot}, {i}]")
     
     return [X_intercept, Y_intercept], copy3, theme
+
+
+
+
+
+
+
+
+
 
 
 def fitRANSAC(Y_coor, lefts, rights): 
@@ -118,10 +181,6 @@ def preprocessImage(image, low_threshold = 40, high_threshold = 250):
 
     edges = cv2.Canny(img_erosion2, low_threshold, high_threshold)
   
-
-
-
-
     sobelx = cv2.Sobel(src=edges, ddepth=cv2.CV_64F, dx=1, dy=0, ksize=5) # Sobel Edge Detection on the X axis
     sobely = cv2.Sobel(src=edges, ddepth=cv2.CV_64F, dx=0, dy=1, ksize=5) # Sobel Edge Detection on the Y axis
     sobelxy= cv2.bitwise_and(sobelx, sobely)
@@ -148,14 +207,16 @@ def detectDataPoint(img):
         horPixels[horPixels != 0] = 1
         for i in range(width2-10):
             if(leftIndex==-1 and sum(horPixels[width2-i-30:width2-i])>25):
+                #print("Left")
                 leftIndex=i
             if(rightIndex==-1 and sum(horPixels[width2+i:width2+30+i])>25):
+                #print("Right")
                 rightIndex=i
                 
             if(not(rightF) and not(leftF)):
                 break
 
-        if(not(leftF) and not(rightF)):
+        if(not(rightIndex==-1) and not(leftIndex==-1)):
             if(leftIndex+rightIndex>100):
                 lefts.append(width2-leftIndex)
                 rights.append(width2+rightIndex)
@@ -167,7 +228,7 @@ def detectDataPoint(img):
 
 
 
-def grassDetection(img):
+def grassDetection(img,grayScale=False):
 
     dst = cv2.GaussianBlur(img,(5,5),cv2.BORDER_DEFAULT)
 
@@ -177,60 +238,27 @@ def grassDetection(img):
     # mask = cv2.inRange(hsv, (36, 25, 25), (86, 255,255))
     grassmask = cv2.inRange(hsv, (35, 20, 20), (77, 255,255))
     deadGrassMask = cv2.inRange(hsv, (20, 43, 46), (34, 255,255))
-    dirtmask=cv2.inRange(hsv,(19,24,33),(50,50,255))
+    #dirtmask=cv2.inRange(hsv,(7,25,61),(21,84,123))
     mask=cv2.bitwise_or(grassmask,deadGrassMask)
-    mask=cv2.bitwise_or(mask,dirtmask)
+    #mask=cv2.bitwise_or(mask,dirtmask)
+
+    
+    mask=cv2.erode(mask,None,iterations=2)
+    mask=cv2.dilate(mask,None,iterations=2)
     ## slice the green0
     imask = mask>0
     green = np.zeros_like(img, np.uint8)
     green[imask] = img[imask]
     gray = cv2.cvtColor(green, cv2.COLOR_BGR2GRAY)
-
-    #cv2.imshow("Blur", gray)
-    #cv2.waitKey(0)
+    if(grayScale):
+        cv2.imshow("Blur", gray)
+        cv2.waitKey(0)
     return gray
 
 
 
 
 
-
-counter = 1
-for fileName in listdir(path)[0:1]:
-    print(f"\n[Picture {counter}]")
-    counter += 1
-    ### Get Image
-    #img = cv2.imread(r'/home/ubuntu/catkin_ws/src/lane_detection/src/images' + fileName)
-
-    print(fileName)
-
-    img=cv2.imread(path+fileName)
-
+def FinalizeImage(image):
     
-    ### Preprocess Image
-    temp = grassDetection(img)
-    rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    ### Detect data points
-    Y_coor, lefts, rights = detectDataPoint(temp)
-
-    if(len(lefts) > 1) : 
-
-        ransacLeft, ransacRight =  fitRANSAC(Y_coor, lefts, rights)
-
-        ### Output Frame
-        intercept, outFrame, theme =  outputFrame(rgb_image, ransacLeft, ransacRight)
-
-        ### Plot
-        print(len(lefts))
-        plotFrame(intercept, outFrame, theme)
-        xx = 10
-            ### Answer
-        response(intercept)
-        rgb_image = None
-        plt.imshow(outFrame)  
-        plt.figure(0).clear()    
-    
-    else : 
-        print("Bad Values ")
-    ### Fit Ransac
-    
+    return 'deez'

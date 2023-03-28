@@ -71,7 +71,7 @@ def plotFrame(intercept, copy3, theme,grey):
     plt.pause(.8)
     plt.close()
     
-def response(intercept,shape):
+def response(intercept,shape, motorControl):
     print(intercept)
     
     xMax=shape[0]
@@ -79,12 +79,10 @@ def response(intercept,shape):
 
     x=intercept[0]
     y=intercept[1]
-    motorControl=MotorControl()
+    #motorControl=MotorControl()
     
     motorControl.direction=0
-    motorControl.speed=0
-    
-   
+    motorControl.speed = 20    
     # if bad Y intercrpt ignore. Above/below middle y threshold
     if(y<yMax/2-50 or y>yMax/2+50) :
         print("Incorrect Y intercept Values")
@@ -93,10 +91,10 @@ def response(intercept,shape):
         print("No adjustment")
     elif (x - xMax < 0):
         print("Adjust to the left")
-        motorControl.steer += 40
+        motorControl.steer += 10
     else: 
         print("Adjust to the right")
-        motorControl.steer -= 20
+        motorControl.steer -= 10
 
     motorControl.control_pub.publish(f"1, {motorControl.steer}, {motorControl.direction}, {motorControl.speed}\n")        
 

@@ -1,6 +1,6 @@
 from LaneDetection import *
 import rospy
-
+from LiveFeed import *
 
 
 
@@ -12,6 +12,7 @@ path = "/home/selfdrivingcar/Videos/"
 
 cap=cv2.VideoCapture(path+"capture0.mp4")
 ### Preprocess Image
+motorControl=MotorControl()
 
 i =0
 while(cap.isOpened()):
@@ -56,13 +57,14 @@ while(cap.isOpened()):
             ### Answer 
 
         shape=[img.shape[0],img.shape[1]]
-        
-        response(intercept,shape)
+
+        response(intercept,shape, motorControl)
         rgb_image = None
         #plt.imshow(outFrame)  
         #plt.figure(0).clear()  
     elif(False): 
         print("Bad Values ")
+motorControl.control_pub.publish(f"1, 128, 0, 0\n")        
 
     #fourcc = cv2.VideoWriter_fourcc(*'XVID')
 

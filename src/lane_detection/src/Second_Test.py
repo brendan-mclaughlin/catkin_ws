@@ -13,7 +13,7 @@ import matplotlib #inline
 
 
 ## Read
-path = "/home/selfdrivingcar/catkin_ws/src/lane_detection/src/images/"
+path = "/home/selfdrivingcar/Pictures/NewGrassImages/Working"
 
 def plotFrame(intercept, copy3, theme):
     # create figure
@@ -175,11 +175,20 @@ def grassDetection(img):
 
     ## mask of green (36,25,25) ~ (86, 255,255)
     # mask = cv2.inRange(hsv, (36, 25, 25), (86, 255,255))
-    grassmask = cv2.inRange(hsv, (35, 20, 20), (77, 255,255))
+    grassmask = cv2.inRange(hsv, (28, 61, 150), (38, 255,255))
     deadGrassMask = cv2.inRange(hsv, (20, 43, 46), (34, 255,255))
+    concreteMask = cv2.inRange(hsv, (18, 41, 202), (22, 47,216))
+
     dirtmask=cv2.inRange(hsv,(19,24,33),(50,50,255))
     mask=cv2.bitwise_or(grassmask,deadGrassMask)
     mask=cv2.bitwise_or(mask,dirtmask)
+    
+    
+    #TODO: Check if deadGrass is needed
+
+    mask=concreteMask
+
+
     ## slice the green0
     imask = mask>0
     green = np.zeros_like(img, np.uint8)

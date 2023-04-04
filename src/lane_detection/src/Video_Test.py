@@ -1,6 +1,6 @@
 from LaneDetection import *
 import rospy
-from LiveFeed import *
+
 
 
 
@@ -10,7 +10,7 @@ rospy.init_node('lane_detection', anonymous=True)
 ## Read
 path = "/home/selfdrivingcar/Videos/"
 
-cap=cv2.VideoCapture(path+"capture0.mp4")
+cap=cv2.VideoCapture(path+"capture14.mp4")
 ### Preprocess Image
 motorControl=MotorControl()
 
@@ -32,7 +32,7 @@ while(cap.isOpened()):
 
 
 
-    temp = grassDetection(img)
+    temp = grassDetection(img,True)
     #videoStitch.append(temp)
     rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     ### Detect data points

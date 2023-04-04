@@ -2,7 +2,9 @@ import cv2
 import numpy as np
 
 ## Read
-img = cv2.imread('/home/selfdrivingcar/catkin_ws/src/lane_detection/src/images/img2.jpg')
+#img = cv2.imread('/home/selfdrivingcar/catkin_ws/src/lane_detection/src/images/Grass1.png')
+img = cv2.imread('/home/selfdrivingcar/Grass1.png')
+
 
 ## convert to hsv
 

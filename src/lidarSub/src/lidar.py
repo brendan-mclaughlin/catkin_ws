@@ -18,5 +18,5 @@ class Lidar:
             return 1.1
         temp = np.append(self.distance[0:15],self.distance[344:359])
         temp[temp<0.1] = 1000
-        print(temp)
+        #print(temp)
         return np.amin(temp)

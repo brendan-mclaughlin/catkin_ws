@@ -10,18 +10,21 @@ from time import sleep
 from LaneDetection import *
 
 timeMeasurement=0
-
+motorControl=MotorControl()
 def callback(data):
  
       # Used to convert between ROS and OpenCV images
     
     global timeMeasurement
+    global motorControl
     if timeMeasurement==30:
         br = CvBridge()
 
       # Output debugging information to the terminal
-        rospy.loginfo("receiving video frame")
+        #rospy.loginfo("receiving video frame")
+        print("Recieved video frame")
 
+        #np_arr=np.frombuffer(data.data,np.uint8)
 
         np_arr=np.fromstring(data.data,np.uint8)
         img=cv2.imdecode(np_arr,cv2.IMREAD_COLOR)
@@ -45,8 +48,8 @@ def callback(data):
           
           
           
-          plotFrame(intercept, outFrame, theme,temp)
-          cv2.destroyAllWindows() 
+          #plotFrame(intercept, outFrame, theme,temp)
+          #cv2.destroyAllWindows() 
 
 
               ### Answer 
@@ -59,17 +62,16 @@ def callback(data):
           #plt.figure(0).clear()  
         elif(False): 
             print("Bad Values ")
-        motorControl.control_pub.publish(f"1, 128, 0, 0\n")        
+           
     else:
         timeMeasurement+=1
 
-
+ 
 
 
 ## Read
 
 ### Preprocess Image
-motorControl=MotorControl()
 
 rospy.init_node('video_sub_py', anonymous=True)
   

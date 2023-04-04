@@ -12,7 +12,9 @@ from clear_cache import clear as clear_cache
 import matplotlib #inline
 import time
 import rospy
+import math
 
+prev=0
 
 
 def getResizedImage(img, scale_percent=20):
@@ -73,28 +75,52 @@ def plotFrame(intercept, copy3, theme,grey):
     
 def response(intercept,shape, motorControl):
     print(intercept)
-    
-    xMax=shape[0]
-    yMax=shape[1]
+    global prev
+   
+    #0is left
+    #1 if right
+   
+
+    #xMax=shape[0]
+    xMax = 320
+    yMax = 240
+    #yMax=shape[1]
 
     x=intercept[0]
     y=intercept[1]
     #motorControl=MotorControl()
     
+    xDif = np.abs(xMax/2 - x)
+    xConst = .25
+    xTurn=math.floor(xConst*xDif)
     motorControl.direction=0
-    motorControl.speed = 20    
+    motorControl.speed = 50    
+
+     
+
     # if bad Y intercrpt ignore. Above/below middle y threshold
-    if(y<yMax/2-50 or y>yMax/2+50) :
+    if(y<yMax/2-75 or y>yMax/2+75) :
         print("Incorrect Y intercept Values")
         return 
-    elif (np.abs(intercept[0] - xMax/2) < 50):
+    elif (np.abs(x - xMax/2) < 5):
         print("No adjustment")
-    elif (x - xMax < 0):
+        #motorControl.steer = 128
+    elif(xMax/2 - x > 0):
         print("Adjust to the left")
-        motorControl.steer += 10
-    else: 
+        if(prev>0):
+            prev=0
+        prev-=1
+        if(prev==-2):
+            motorControl.steer=128
+        motorControl.steer -= xTurn
+    elif(xMax/2 - x < 0): 
+        if(prev<0):
+            prev=0
+        prev+=1
+        if(prev==2):
+            motorControl.steer=128
         print("Adjust to the right")
-        motorControl.steer -= 10
+        motorControl.steer += xTurn
 
     motorControl.control_pub.publish(f"1, {motorControl.steer}, {motorControl.direction}, {motorControl.speed}\n")        
 
@@ -116,7 +142,7 @@ def outputFrame(image, ransacLeft, ransacRight):
 
     Y_intercept = (b2-b1) / (a1 - a2)
     X_intercept = a1 * Y_intercept + b1 
-
+    #TODO: X and Y acceptable intercept ranges
     for i in range(copy3.shape[0]):
         if i < int(Y_intercept):
             continue
@@ -235,11 +261,27 @@ def grassDetection(img,grayScale=False):
     ## mask of green (36,25,25) ~ (86, 255,255)
     # mask = cv2.inRange(hsv, (36, 25, 25), (86, 255,255))
     grassmask = cv2.inRange(hsv, (35, 20, 20), (77, 255,255))
+    #grassmask = cv2.inRange(hsv, (25, 50, 100), (77, 255,255))
+
     deadGrassMask = cv2.inRange(hsv, (20, 43, 46), (34, 255,255))
-    #dirtmask=cv2.inRange(hsv,(7,25,61),(21,84,123))
+
+    concreteMask = cv2.inRange(hsv, (0, 0, 0), (255, 60,255))
+
+
+    dirtmask=cv2.inRange(hsv,(11, 67, 75), (28, 110,100))
     mask=cv2.bitwise_or(grassmask,deadGrassMask)
     #mask=cv2.bitwise_or(mask,dirtmask)
-
+    mask = cv2.bitwise_or(mask, dirtmask)
+    combinedMask = cv2.bitwise_and(mask, concreteMask)
+    
+    mask=mask-combinedMask
+    
+    
+    
+    #mask = dirtmask 
+    
+    #mask=grassmask
+    
     
     mask=cv2.erode(mask,None,iterations=2)
     mask=cv2.dilate(mask,None,iterations=2)

@@ -12,7 +12,7 @@ from clear_cache import clear as clear_cache
 import matplotlib #inline
 
 
-path = "/home/selfdrivingcar/catkin_ws/src/lane_detection/src/images/"
+path = "/home/selfdrivingcar/Pictures/NewGrassImages/Working/"
 
 def getResizedImage(fileName, scale_percent=50):
     img = cv2.imread(path + fileName)

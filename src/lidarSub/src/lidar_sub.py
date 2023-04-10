@@ -20,26 +20,36 @@ def main():
     motorControl=MotorControl()
     rospy.init_node('listener', anonymous=True)
     maxSpeed=100
+    motorControl.speed=20
     while True:
-        time.sleep(0.5)
         a=lid.get_minimumDist()
+        time.sleep(0.1)
+        b=lid.get_minimumDist()
+        
+        #velocity variable is the relative speed of the object in front of the car
+        velocity=(b-a)/0.1
+        
 
-        print(a)
-        if(a<0.2):
+        if((motorControl.speed+velocity)<0):
             motorControl.speed=0
-        elif((a<.45)&(a>=0.2)&(motorControl.speed<=maxSpeed)&(motorControl.speed>0)):
-            motorControl.speed=motorControl.speed-1
-            #print("SLOW DOWN")
-            #motorControl.direction=0
-            #motorControl.speed=0
-        elif((a>0.55)&(motorControl.speed<maxSpeed)):
-            if(motorControl.speed<20):#this statement is to set it to the minimum movement speed
-                time.sleep(3)
-                motorControl.speed=50
-                motorControl.direction=0
-                motorControl.steer=128
-                print("Executed")
-            motorControl.speed=motorControl.speed+1
+        else:
+            motorControl.speed=motorControl.speed+velocity
+        
+        # if(a<0.5):
+        #     motorControl.speed=0
+        # elif((a<.95)&(a>=0.5)&(motorControl.speed<=maxSpeed)&(motorControl.speed>0)):
+        #     motorControl.speed=motorControl.speed-10
+        #     #print("SLOW DOWN")
+        #     #motorControl.direction=0
+        #     #motorControl.speed=0
+        # elif((a>1.05)&(motorControl.speed<maxSpeed)):
+        #     if(motorControl.speed<20):#this statement is to set it to the minimum movement speed
+        #         time.sleep(3)
+        #         motorControl.speed=10
+        #         motorControl.direction=0
+        #         motorControl.steer=128
+        #         print("Executed")
+        #     motorControl.speed=motorControl.speed+10
         
 
         motorControl.control_pub.publish(f"1, {motorControl.steer}, {motorControl.direction}, {motorControl.speed}\n")

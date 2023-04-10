@@ -8,6 +8,9 @@ import random
 from remoteControl import MotorControl
 from time import sleep
 from LaneDetection import *
+import warnings
+warnings.simplefilter("ignore", DeprecationWarning)
+
 
 timeMeasurement=0
 motorControl=MotorControl()
@@ -17,7 +20,7 @@ def callback(data):
     
     global timeMeasurement
     global motorControl
-    if timeMeasurement==30:
+    if timeMeasurement==5:
         br = CvBridge()
 
       # Output debugging information to the terminal

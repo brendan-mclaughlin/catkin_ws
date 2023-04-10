@@ -17,6 +17,7 @@ import math
 prev=0
 
 
+#dont call 
 def getResizedImage(img, scale_percent=20):
     
     #img = cv2.imread(r'/home/ubuntu/catkin_ws/src/lane_detection/src/images' + fileName)
@@ -74,12 +75,21 @@ def plotFrame(intercept, copy3, theme,grey):
     plt.close()
     
 def response(intercept,shape, motorControl):
-    print(intercept)
+    #print(intercept)
     global prev
    
     #0is left
     #1 if right
    
+
+
+
+
+
+
+
+
+
 
     #xMax=shape[0]
     xMax = 320
@@ -91,10 +101,33 @@ def response(intercept,shape, motorControl):
     #motorControl=MotorControl()
     
     xDif = np.abs(xMax/2 - x)
-    xConst = .25
+
+
+    #HughesSidewalk
+    #xConst = .075
+    #noAdjust=15
+    #turnboundary=50
+    #prevCount=8
+    #speed=90
+
+
+    #BentonSidwalk
+    xConst = .1
+    noAdjust=10
+    turnboundary=30
+    prevCount=8
+    speed=70
+
+
+
+
+
+
     xTurn=math.floor(xConst*xDif)
+
+    #print("Turning: " + xTurn)
     motorControl.direction=0
-    motorControl.speed = 50    
+    motorControl.speed = speed
 
      
 
@@ -102,27 +135,30 @@ def response(intercept,shape, motorControl):
     if(y<yMax/2-75 or y>yMax/2+75) :
         print("Incorrect Y intercept Values")
         return 
-    elif (np.abs(x - xMax/2) < 5):
+    elif (np.abs(x - xMax/2) < noAdjust):
         print("No adjustment")
-        #motorControl.steer = 128
+        prev+=1
+        if(prev==prevCount):
+            motorControl.steer = 128
     elif(xMax/2 - x > 0):
-        print("Adjust to the left")
-        if(prev>0):
-            prev=0
-        prev-=1
-        if(prev==-2):
-            motorControl.steer=128
+        prev=0
+        if(x < ((xMax/2) - 40)):
+            #far right fail safe
+            print("Adjust BIG left: " +  str(xTurn)) # if xpixel is > 40 pixels left of center turn more 
+        else:
+            print("Adjust SMALL left")
         motorControl.steer -= xTurn
     elif(xMax/2 - x < 0): 
-        if(prev<0):
-            prev=0
-        prev+=1
-        if(prev==2):
-            motorControl.steer=128
-        print("Adjust to the right")
+        prev=0
+        print("Adjust BIG Right: " +  str(xTurn)) # if xpixel is > 40 pixels left of center turn more 
         motorControl.steer += xTurn
 
-    motorControl.control_pub.publish(f"1, {motorControl.steer}, {motorControl.direction}, {motorControl.speed}\n")        
+    if(motorControl.steer<128-turnboundary):
+        motorControl.steer=128-turnboundary
+    elif(motorControl.steer>128+turnboundary):
+        motorControl.steer=128+turnboundary
+    if(prev<prevCount+1):
+        motorControl.control_pub.publish(f"1, {motorControl.steer}, {motorControl.direction}, {motorControl.speed}\n")        
 
 
 

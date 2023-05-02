@@ -19,41 +19,37 @@ def main():
     lid = Lidar()
     motorControl=MotorControl()
     rospy.init_node('listener', anonymous=True)
-    maxSpeed=100
-    motorControl.speed=20
+    maxSpeed=150
+    motorControl.speed=50
     while True:
         a=lid.get_minimumDist()
         time.sleep(0.1)
-        b=lid.get_minimumDist()
         
-        #velocity variable is the relative speed of the object in front of the car
-        velocity=(b-a)/0.1
-        
-
-        if((motorControl.speed+velocity)<0):
-            motorControl.speed=0
-        else:
-            motorControl.speed=motorControl.speed+velocity
-        
-        # if(a<0.5):
+        print(a)
+        print(motorControl.speed)
+        #motorControl.speed=50
+        # if((motorControl.speed+velocity)<0):
         #     motorControl.speed=0
-        # elif((a<.95)&(a>=0.5)&(motorControl.speed<=maxSpeed)&(motorControl.speed>0)):
-        #     motorControl.speed=motorControl.speed-10
-        #     #print("SLOW DOWN")
-        #     #motorControl.direction=0
-        #     #motorControl.speed=0
-        # elif((a>1.05)&(motorControl.speed<maxSpeed)):
-        #     if(motorControl.speed<20):#this statement is to set it to the minimum movement speed
-        #         time.sleep(3)
-        #         motorControl.speed=10
-        #         motorControl.direction=0
-        #         motorControl.steer=128
-        #         print("Executed")
-        #     motorControl.speed=motorControl.speed+10
+        # elif(motorControl.speed+velocity>50):
+        #     motorControl.speed=50
+        # else:
+        #     motorControl.speed=motorControl.speed+velocity
         
-
+        if(a<1):
+            motorControl.speed=0
+        elif((a<2.3)&(a>=1)):
+                if(motorControl.speed>25):
+                    motorControl.speed=motorControl.speed-5
+            #print("SLOW DOWN")
+            #motorControl.direction=0
+            #motorControl.speed=0
+        elif((a>2.57)):
+                if(motorControl.speed<maxSpeed):
+                     motorControl.speed=motorControl.speed+5
+        
         motorControl.control_pub.publish(f"1, {motorControl.steer}, {motorControl.direction}, {motorControl.speed}\n")
-                
+
+            
     
     # spin() simply keeps python from exiting until this node is stopped
     #rospy.spin()

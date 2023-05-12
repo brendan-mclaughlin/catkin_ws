@@ -1,8 +1,8 @@
-import rospy # Python library for ROS
-from sensor_msgs.msg import Image # Image is the message type
+import rospy  # Python library for ROS
+from sensor_msgs.msg import Image  # Image is the message type
 from sensor_msgs.msg import CompressedImage
-from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
-import cv2 # OpenCV library
+from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
+import cv2  # OpenCV library
 import numpy as np
 import random
 from remoteControl import MotorControl
@@ -12,79 +12,79 @@ import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
 
-timeMeasurement=0
-motorControl=MotorControl()
+# global frame count
+timeMeasurement = 0
+
+# adds ability to publish commands to the robot
+motorControl = MotorControl()
+
+
 def callback(data):
- 
-      # Used to convert between ROS and OpenCV images
-    
+
+    # Used to convert between ROS and OpenCV images
+
     global timeMeasurement
+
     global motorControl
-    if timeMeasurement==5:
+    if timeMeasurement == 5:  # Every 5 frames but this can be changed
         br = CvBridge()
 
-      # Output debugging information to the terminal
-        #rospy.loginfo("receiving video frame")
         print("Recieved video frame")
 
-        #np_arr=np.frombuffer(data.data,np.uint8)
+        # Gets the image from the data paramater
+        np_arr = np.fromstring(data.data, np.uint8)
+        img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-        np_arr=np.fromstring(data.data,np.uint8)
-        img=cv2.imdecode(np_arr,cv2.IMREAD_COLOR)
-        timeMeasurement=0
+        timeMeasurement = 0
+
+        # runs grass dection in the LaneDetection.py
         temp = grassDetection(img)
-        #videoStitch.append(temp)
+
         rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        ### Detect data points
+        # Detect data points
         Y_coor, lefts, rights = detectDataPoint(temp)
-        
-        
-        if(len(lefts) > 3) : 
 
-          ransacLeft, ransacRight =  fitRANSAC(Y_coor, lefts, rights)
+        # if we find enough data points then run the algorithm, if less than 3 then dont not enough points
+        if (len(lefts) > 3):
 
-          ### Output Frame
-          intercept, outFrame, theme =  outputFrame(rgb_image, ransacLeft, ransacRight)
+            ransacLeft, ransacRight = fitRANSAC(Y_coor, lefts, rights)
 
-          ### Plot
-          #print(len(lefts))
-          
-          
-          
-          #plotFrame(intercept, outFrame, theme,temp)
-          #cv2.destroyAllWindows() 
+            # Output Frame
+            intercept, outFrame, theme = outputFrame(
+                rgb_image, ransacLeft, ransacRight)
 
+            # Uncomment these lines to see the output frame
 
-              ### Answer 
+            # plotFrame(intercept, outFrame, theme,temp)
+            # cv2.destroyAllWindows()
 
-          shape=[img.shape[0],img.shape[1]]
+            # Answer
 
-          response(intercept,shape, motorControl)
-          rgb_image = None
-          #plt.imshow(outFrame)  
-          #plt.figure(0).clear()  
-        elif(False): 
+            shape = [img.shape[0], img.shape[1]]
+
+            # gets the motor responce from the frame
+            response(intercept, shape, motorControl)
+            rgb_image = None
+            # plt.imshow(outFrame)
+            # plt.figure(0).clear()
+        elif (False):
             print("Bad Values ")
-           
+
     else:
-        timeMeasurement+=1
-
- 
+        timeMeasurement += 1
 
 
-## Read
-
-### Preprocess Image
-
+# initializing video subscriber node
 rospy.init_node('video_sub_py', anonymous=True)
-  
-  # Node is subscribing to the video_frames topic
-  #rospy.Subscriber('video_frames', Image, callback)
 
-rospy.Subscriber('/camera/image/compressed', CompressedImage, callback, queue_size=1)
-  
-  # spin() simply keeps python from exiting until this node is stopped
+# Node is subscribing to the video_frames topic
+
+# calls the callback function every frame
+rospy.Subscriber('/camera/image/compressed',
+                 CompressedImage, callback, queue_size=1)
+
+# spin() simply keeps python from exiting until this node is stopped
 rospy.spin()
- 
-  # Close down the video stream when done
+
+# Close down the video stream when done
 cv2.destroyAllWindows()
